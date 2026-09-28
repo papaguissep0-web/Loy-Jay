@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Loy Jay - Boutique en ligne</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#f8f9fa;color:#222}
+.container{max-width:1100px;margin:auto;padding:0 16px}
+header{background:#fff;box-shadow:0 2px 8px #0001;position:sticky;top:0;z-index:10}
+.header-content{display:flex;justify-content:space-between;align-items:center;padding:18px 0}
+.logo{font-size:25px;font-weight:bold;color:#1d3557;text-decoration:none}
+.logo span{color:#e63946}
+nav{display:flex;gap:15px;flex-wrap:wrap}
+nav a{cursor:pointer;text-decoration:none;color:#333}
+.hero{background:linear-gradient(135deg,#1d3557,#457b9d);color:white;text-align:center;padding:70px 20px}
+.hero h1{font-size:38px;margin-bottom:15px}
+.hero p{font-size:18px;margin-bottom:25px}
+.btn{background:#e63946;color:white;border:0;border-radius:8px;padding:12px 22px;cursor:pointer;font-weight:bold}
+.section{padding:40px 0}
+.section h2{text-align:center;margin-bottom:25px}
+.categories{text-align:center;margin-bottom:25px}
+.cat-btn{border:1px solid #ccc;background:white;padding:9px 17px;border-radius:30px;margin:4px;cursor:pointer}
+.cat-btn.active{background:#1d3557;color:white}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px}
+.product-card{background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px #0001}
+.product-card img{width:100%;height:180px;object-fit:cover}
+.product-info{padding:15px}
+.product-info h3{margin-bottom:7px}
+.category{color:#777;font-size:14px;margin-bottom:8px}
+.price{font-size:20px;font-weight:bold;color:#e63946;margin:10px 0}
+.product-info button{width:100%;padding:10px;background:#1d3557;color:white;border:0;border-radius:7px;cursor:pointer}
+.page{display:none}
+.page.active{display:block}
+.auth-section,.account-section,.owner-card{max-width:700px;margin:40px auto;background:white;padding:30px;border-radius:12px;box-shadow:0 3px 15px #0001}
+.auth-section{max-width:420px}
+.form-group{margin-bottom:17px}
+.form-group label{display:block;margin-bottom:6px;font-weight:bold}
+.form-group input,.form-group textarea,.form-group select{width:100%;padding:12px;border:1px solid #ddd;border-radius:7px}
+.auth-section .btn{width:100%}
+.auth-section p{text-align:center;margin-top:15px}
+.auth-section a{color:#457b9d;cursor:pointer;font-weight:bold}
+.cart-item{display:flex;align-items:center;gap:15px;background:white;padding:15px;border-radius:10px;margin-bottom:12px}
+.cart-item img{width:80px;height:80px;object-fit:cover;border-radius:8px}
+.cart-item-info{flex:1}
+.qty-controls{display:flex;gap:10px;align-items:center;margin-top:8px}
+.qty-controls button{padding:5px 10px;border:1px solid #ccc;background:white;border-radius:5px}
+.owner-product{display:flex;align-items:center;gap:15px;padding:12px 0;border-bottom:1px solid #eee}
+.owner-product img{width:60px;height:60px;object-fit:cover;border-radius:7px}
+.owner-product div:nth-child(2){flex:1}
+footer{background:#111;color:#aaa;text-align:center;padding:30px;margin-top:40px}
+
+@media(max-width:600px){
+.header-content{flex-direction:column;gap:12px}
+.hero h1{font-size:29px}
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+<header>
+<div class="container header-content">
+
+<a class="logo" href="#" onclick="go('home');return false">
+Loy <span>Jay</span>
+</a>
+
+<nav>
+<a onclick="go('home')">Accueil</a>
+<a onclick="go('home')">Produits</a>
+<a onclick="go('cart')">Panier (<span id="cart-count">0</span>)</a>
+<a onclick="go('account')">Mon compte</a>
+<a id="login-link" onclick="go('login')">Connexion</a>
+</nav>
+
+</div>
+</header>
+
+
+<div id="page-home" class="page active">
+
+<section class="hero">
+
+<div class="container">
+
+<h1>Bienvenue chez Loy Jay</h1>
+
+<p>
+Vêtements, téléphones, électronique et bien plus encore.
+</p>
+
+<button class="btn"
+onclick="document.getElementById('produits').scrollIntoView({behavior:'smooth'})">
+Voir les produits
+</button>
+
+</div>
+
+</section>
+
+
+<section class="section" id="produits">
+
+<div class="container">
+
+<h2>Nos produits</h2>
+
+<div class="categories">
+
+<button class="cat-btn active" data-cat="all">Tout</button>
+<button class="cat-btn" data-cat="vetements">Vêtements</button>
+<button class="cat-btn" data-cat="telephones">Téléphones</button>
+<button class="cat-btn" data-cat="electronique">Électronique</button>
+
+</div>
+
+<div id="products-grid" class="products-grid"></div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<div id="page-cart" class="page">
+
+<section class="section">
+
+<div class="container">
+
+<h2>Mon panier</h2>
+
+<div id="cart-items"></div>
+
+<div id="cart-summary"></div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<div id="page-account" class="page">
+
+<div class="account-section">
+
+<h2>Mon compte</h2>
+
+<div id="account-content"></div>
+
+</div>
+
+</div>
+
+
+<div id="page-login" class="page">
+
+<div class="auth-section">
+
+<h2>Connexion</h2>
+
+<p id="login-error" style="color:red"></p>
+
+<form id="login-form">
+
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="login-email" required>
+</div>
+
+<div class="form-group">
+<label>Mot de passe</label>
+<input type="password" id="login-password" required>
+</div>
+
+<button class="btn">Se connecter</button>
+
+</form>
+
+<p>
+Pas de compte ?
+<a onclick="go('register')">Créer un compte</a>
+</p>
+
+</div>
+
+</div>
+
+
+<div id="page-register" class="page">
+
+<div class="auth-section">
+
+<h2>Créer un compte</h2>
+
+<p id="reg-error" style="color:red"></p>
+<p id="reg-success" style="color:green"></p>
+
+<form id="register-form">
+
+<div class="form-group">
+<label>Nom complet</label>
+<input id="reg-name" required>
+</div>
+
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="reg-email" required>
+</div>
+
+<div class="form-group">
+<label>Mot de passe</label>
+<input type="password" id="reg-password" minlength="6" required>
+</div>
+
+<button class="btn">
+Créer mon compte
+</button>
+
+</form>
+
+<p>
+Déjà un compte ?
+<a onclick="go('login')">Se connecter</a>
+</p>
+
+</div>
+
+</div>
+
+
+<div id="page-owner" class="page">
+
+<section class="section">
+
+<div class="container">
+
+<h2>Vendre un produit</h2>
+
+<div class="owner-card">
+
+<form id="product-form">
+
+<div class="form-group">
+<label>Nom du produit</label>
+<input id="p-name" required>
+</div>
+
+<div class="form-group">
+
+<label>Catégorie</label>
+
+<select id="p-category">
+
+<option value="vetements">Vêtements</option>
+<option value="telephones">Téléphones</option>
+<option value="electronique">Électronique</option>
+<option value="autres">Autres</option>
+
+</select>
+
+</div>
+
+<div class="form-group">
+<label>Prix</label>
+<input id="p-price" type="number" min="0" required>
+</div>
+
+<div class="form-group">
+<label>Stock</label>
+<input id="p-stock" type="number" min="0" value="1">
+</div>
+
+<div class="form-group">
+<label>Image du produit</label>
+<input id="p-image" placeholder="https://...">
+</div>
+
+<div class="form-group">
+<label>Description</label>
+<textarea id="p-description"></textarea>
+</div>
+
+<button class="btn">
+Publier le produit
+</button>
+
+</form>
+
+</div>
+
+
+<div class="owner-card">
+
+<h3>Mes produits</h3>
+
+<div id="owner-products"></div>
+
+</div>
+
+</div>
+
+</section>
+
+</div>
+
+
+<footer>
+
+<p>
+© 2026 Loy Jay Marketplace — Tous droits réservés
+</p>
+
+<p>
+By Kali'Graph
+</p>
+
+</footer>
+
+
+<script>
+
+/* ==============================
+   CONFIGURATION SUPABASE
+================================ */
+
+const SUPABASE_URL="REMPLACE_PAR_TON_PROJECT_URL";
+
+const SUPABASE_ANON_KEY="REMPLACE_PAR_TA_PUBLISHABLE_KEY";
+
+let sb=null;
+
+if(
+!SUPABASE_URL.startsWith("REMPLACE") &&
+!SUPABASE_ANON_KEY.startsWith("REMPLACE")
+){
+
+sb=window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_ANON_KEY
+);
+
+}
+
+
+/* ==============================
+   NAVIGATION
+================================ */
+
+function go(page){
+
+document.querySelectorAll(".page")
+.forEach(p=>p.classList.remove("active"));
+
+const target=document.getElementById("page-"+page);
+
+if(target)
+target.classList.add("active");
+
+window.scrollTo(0,0);
+
+if(page==="home")
+loadProducts();
+
+if(page==="cart")
+loadCart();
+
+if(page==="account")
+loadAccount();
+
+if(page==="owner")
+loadOwner();
+
+}
+
+
+/* ==============================
+   PRODUITS
+================================ */
+
+async function loadProducts(category="all"){
+
+const grid=document.getElementById("products-grid");
+
+if(!sb){
+
+grid.innerHTML=
+"<p>La connexion de la boutique doit encore être configurée.</p>";
+
+return;
+
+}
+
+grid.innerHTML="<p>Chargement...</p>";
+
+let query=sb
+.from("products")
+.select("*")
+.eq("published",true)
+.order("created_at",{ascending:false});
+
+const result=await query;
+
+if(result.error){
+
+grid.innerHTML=
+"<p>Erreur : "+result.error.message+"</p>";
+
+return;
+
+}
+
+let products=result.data || [];
+
+if(category!=="all"){
+
+products=products.filter(
+p=>p.category===category
+);
+
+}
+
+if(!products.length){
+
+grid.innerHTML=
+"<p>Aucun produit disponible pour le moment.</p>";
+
+return;
+
+}
+
+grid.innerHTML=products.map(product=>`
+
+<div class="product-card">
+
+<img
+src="${escapeHtml(product.image_url || "https://placehold.co/600x450?text=Loy+Jay")}"
+onerror="this.src='https://placehold.co/600x450?text=Loy+Jay'"
+>
+
+<div class="product-info">
+
+<h3>${escapeHtml(product.name)}</h3>
+
+<div class="category">
+${categoryName(product.category)}
+</div>
+
+<div class="price">
+${Number(product.price || 0).toFixed(2)} €
+</div>
+
+<button onclick="addToCart('${product.id}')">
+Ajouter au panier
+</button>
+
+</div>
+
+</div>
+
+`).join("");
+
+}
+
+
+/* ==============================
+   CATEGORIES
+================================ */
+
+document.querySelectorAll(".cat-btn")
+.forEach(button=>{
+
+button.addEventListener("click",()=>{
+
+document.querySelectorAll(".cat-btn")
+.forEach(b=>b.classList.remove("active"));
+
+button.classList.add("active");
+
+loadProducts(button.dataset.cat);
+
+});
+
+});
+
+
+function categoryName(category){
+
+const names={
+vetements:"Vêtements",
+telephones:"Téléphones",
+electronique:"Électronique",
+autres:"Autres"
+};
+
+return names[category] || category;
+
+}
+
+
+/* ==============================
+   PANIER
+================================ */
+
+function getCart(){
+
+return JSON.parse(
+localStorage.getItem("loyjay_cart") || "[]"
+);
+
+}
+
+
+function saveCart(cart){
+
+localStorage.setItem(
+"loyjay_cart",
+JSON.stringify(cart)
+);
+
+updateCartCount();
+
+}
+
+
+function updateCartCount(){
+
+const cart=getCart();
+
+document.getElementById("cart-count")
+.textContent=
+cart.reduce((total,item)=>total+item.qty,0);
+
+}
+
+
+async function addToCart(id){
+
+const cart=getCart();
+
+const item=cart.find(
+x=>x.id===id
+);
+
+if(item)
+item.qty++;
+
+else
+cart.push({
+id:id,
+qty:1
+});
+
+saveCart(cart);
+
+alert("Produit ajouté au panier !");
+
+}
+
+
+async function loadCart(){
+
+const container=
+document.getElementById("cart-items");
+
+const cart=getCart();
+
+if(!cart.length){
+
+container.innerHTML=
+"<p>Votre panier est vide.</p>";
+
+return;
+
+}
+
+if(!sb){
+
+container.innerHTML=
+"<p>Connexion à la base de données nécessaire.</p>";
+
+return;
+
+}
+
+const ids=cart.map(x=>x.id);
+
+const result=await sb
+.from("products")
+.select("*")
+.in("id",ids);
+
+if(result.error){
+
+container.innerHTML=
+"<p>Erreur : "+result.error.message+"</p>";
+
+return;
+
+}
+
+let total=0;
+
+container.innerHTML=result.data.map(product=>{
+
+const item=cart.find(
+x=>x.id===product.id
+);
+
+const subtotal=
+Number(product.price)*item.qty;
+
+total+=subtotal;
+
+return `
+
+<div class="cart-item">
+
+<img src="${escapeHtml(product.image_url || "")}">
+
+<div class="cart-item-info">
+
+<h3>${escapeHtml(product.name)}</h3>
+
+<div class="price">
+${subtotal.toFixed(2)} €
+</div>
+
+<div class="qty-controls">
+
+<button onclick="changeQty('${product.id}',-1)">
+−
+</button>
+
+<span>${item.qty}</span>
+
+<button onclick="changeQty('${product.id}',1)">
++
+</button>
+
+<button onclick="removeCart('${product.id')}" >
+Supprimer
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+`;
+
+}).join("");
+
+document.getElementById("cart-summary").innerHTML=
+"<h3>Total : "+total.toFixed(2)+" €</h3>";
+
+}
+
+
+function changeQty(id,change){
+
+const cart=getCart();
+
+const item=cart.find(x=>x.id===id);
+
+if(!item)return;
+
+item.qty+=change;
+
+if(item.qty<=0){
+
+const index=cart.indexOf(item);
+
+cart.splice(index,1);
+
+}
+
+saveCart(cart);
+
+loadCart();
+
+}
+
+
+function removeCart(id){
+
+let cart=getCart();
+
+cart=cart.filter(
+x=>x.id!==id
+);
+
+saveCart(cart);
+
+loadCart();
+
+}
+
+
+/* ==============================
+   AUTHENTIFICATION
+================================ */
+
+async function currentUser(){
+
+if(!sb)return null;
+
+const result=
+await sb.auth.getUser();
+
+return result.data.user || null;
+
+}
+
+
+document
+.getElementById("register-form")
+.addEventListener("submit",async event=>{
+
+event.preventDefault();
+
+if(!sb){
+
+document.getElementById("reg-error")
+.textContent=
+"Supabase n'est pas encore configuré.";
+
+return;
+
+}
+
+const result=
+await sb.auth.signUp({
+
+email:
+document.getElementById("reg-email").value,
+
+password:
+document.getElementById("reg-password").value,
+
+options:{
+data:{
+name:
+document.getElementById("reg-name").value
+}
+}
+
+});
+
+if(result.error){
+
+document.getElementById("reg-error")
+.textContent=
+result.error.message;
+
+return;
+
+}
+
+document.getElementById("reg-success")
+.textContent=
+"Compte créé avec succès.";
+
+});
+
+
+document
+.getElementById("login-form")
+.addEventListener("submit",async event=>{
+
+event.preventDefault();
+
+if(!sb){
+
+document.getElementById("login-error")
+.textContent=
+"Supabase n'est pas encore configuré.";
+
+return;
+
+}
+
+const result=
+await sb.auth.signInWithPassword({
+
+email:
+document.getElementById("login-email").value,
+
+password:
+document.getElementById("login-password").value
+
+});
+
+if(result.error){
+
+document.getElementById("login-error")
+.textContent=
+result.error.message;
+
+return;
+
+}
+
+go("home");
+
+});
+
+
+/* ==============================
+   COMPTE
+================================ */
+
+async function loadAccount(){
+
+const container=
+document.getElementById("account-content");
+
+const user=
+await currentUser();
+
+if(!user){
+
+container.innerHTML=`
+
+<p>Vous n'êtes pas connecté.</p>
+
+<br>
+
+<button class="btn"
+onclick="go('login')">
+Se connecter
+</button>
+
+`;
+
+return;
+
+}
+
+container.innerHTML=`
+
+<p>
+<strong>Email :</strong>
+${escapeHtml(user.email)}
+</p>
+
+<br>
+
+<button class="btn"
+onclick="go('owner')">
+Vendre un produit
+</button>
+
+<button class="btn"
+onclick="logout()">
+Se déconnecter
+</button>
+
+`;
+
+}
+
+
+async function logout(){
+
+if(sb)
+await sb.auth.signOut();
+
+go("home");
+
+}
+
+
+/* ==============================
+   PUBLICATION
+================================ */
+
+document
+.getElementById("product-form")
+.addEventListener("submit",async event=>{
+
+event.preventDefault();
+
+if(!sb){
+
+alert(
+"Supabase n'est pas encore configuré."
+);
+
+return;
+
+}
+
+const user=
+await currentUser();
+
+if(!user){
+
+go("login");
+
+return;
+
+}
+
+const product={
+
+name:
+document.getElementById("p-name").value,
+
+category:
+document.getElementById("p-category").value,
+
+price:
+Number(
+document.getElementById("p-price").value
+),
+
+stock:
+Number(
+document.getElementById("p-stock").value
+),
+
+image_url:
+document.getElementById("p-image").value
+||
+"https://placehold.co/600x450?text=Loy+Jay",
+
+description:
+document.getElementById("p-description").value,
+
+user_id:user.id,
+
+published:true
+
+};
+
+const result=
+await sb
+.from("products")
+.insert(product);
+
+if(result.error){
+
+alert(
+"Impossible de publier : "
++
+result.error.message
+);
+
+return;
+
+}
+
+alert(
+"Produit publié avec succès !"
+);
+
+event.target.reset();
+
+loadOwner();
+
+});
+
+
+/* ==============================
+   PRODUITS DU VENDEUR
+================================ */
+
+async function loadOwner(){
+
+const container=
+document.getElementById("owner-products");
+
+const user=
+await currentUser();
+
+if(!user){
+
+go("login");
+
+return;
+
+}
+
+const result=
+await sb
+.from("products")
+.select("*")
+.eq("user_id",user.id)
+.order("created_at",{ascending:false});
+
+if(result.error){
+
+container.innerHTML=
+"<p>"+result.error.message+"</p>";
+
+return;
+
+}
+
+if(!result.data.length){
+
+container.innerHTML=
+"<p>Vous n'avez encore aucun produit.</p>";
+
+return;
+
+}
+
+container.innerHTML=
+result.data.map(product=>`
+
+<div class="owner-product">
+
+<img
+src="${escapeHtml(product.image_url || "")}"
+>
+
+<div>
+
+<strong>
+${escapeHtml(product.name)}
+</strong>
+
+<br>
+
+${Number(product.price).toFixed(2)} €
+
+</div>
+
+<button
+onclick="deleteProduct('${product.id}')">
+Supprimer
+</button>
+
+</div>
+
+`).join("");
+
+}
+
+
+async function deleteProduct(id){
+
+if(!confirm("Supprimer ce produit ?"))
+return;
+
+const result=
+await sb
+.from("products")
+.delete()
+.eq("id",id);
+
+if(result.error){
+
+alert(result.error.message);
+
+return;
+
+}
+
+loadOwner();
+
+loadProducts();
+
+}
+
+
+/* ==============================
+   SECURITE TEXTE
+================================ */
+
+function escapeHtml(value){
+
+return String(value ?? "")
+.replaceAll("&","&amp;")
+.replaceAll("<","&lt;")
+.replaceAll(">","&gt;")
+.replaceAll('"',"&quot;")
+.replaceAll("'","&#039;");
+
+}
+
+
+/* ==============================
+   DEMARRAGE
+================================ */
+
+updateCartCount();
+
+loadProducts();
+
+</script>
+
+</body>
+</html>
